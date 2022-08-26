@@ -120,12 +120,21 @@ def get_data_file(args):
         #    openstack ... < /tmp/file
         # (3) no image data provided
         #    openstack ...
-        try:
+        def stdin_valid():
+          if not sys.stdin:
+             # This seems to be the case in python3
+             return False
+          try:
+             # Legacy method for compatability
             os.fstat(0)
-        except OSError:
-            # (1) stdin is not valid
-            return (None, None)
-        if not sys.stdin.isatty():
+          except OSError:
+            return False
+          return True
+
+        if not stdin_valid():
+          # (1) stdin is not valid
+          return (None, None)
+        elif not sys.stdin.isatty():
             # (2) image data is provided through stdin
             image = sys.stdin
             if hasattr(sys.stdin, 'buffer'):
